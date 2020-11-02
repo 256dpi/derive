@@ -93,6 +93,19 @@ func main() {
 		return
 	}
 
+	// log
+	fmt.Println("==> Running delegates...")
+
+	// run delegates
+	for _, rule := range rules {
+		for _, cmd := range rule.Delegate {
+			go run(cmd)
+		}
+	}
+
+	// log
+	fmt.Println("==> Watching files...")
+
 	// get working directory
 	cwd, err := os.Getwd()
 	if err != nil {
