@@ -1,0 +1,13 @@
+# run script when files changed
+- name: bar
+  match:
+    - "_foo"
+  run:
+    - cp -f _foo _bar
+
+# run script or delegate to watch script
+- name: baz
+  run:
+    - cp -f _foo _baz
+  delegate:
+    - watchman-make -p "_foo" --run "cp -f _foo _baz"
