@@ -75,7 +75,7 @@ func main() {
 	}
 
 	// log
-	fmt.Println("==> Deriving...")
+	fmt.Println("==> Executing rules...")
 
 	// iterate over all rules
 	for _, rule := range rules {
