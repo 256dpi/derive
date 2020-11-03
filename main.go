@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -83,7 +85,7 @@ func main() {
 	for _, rule := range rules {
 		for _, cmd := range rule.Run {
 			fmt.Printf("==> Running %s: %q\n", rule.Name, cmd)
-			run(cmd)
+			run(cmd, rule.Name)
 		}
 	}
 
@@ -101,7 +103,7 @@ func main() {
 	// run delegates
 	for _, rule := range rules {
 		for _, cmd := range rule.Delegate {
-			go run(cmd)
+			go run(cmd, rule.Name)
 		}
 	}
 
@@ -157,7 +159,7 @@ func main() {
 		for rule := range dirty {
 			for _, cmd := range rule.Run {
 				fmt.Printf("==> Running %s: %q\n", rule.Name, cmd)
-				run(cmd)
+				run(cmd, rule.Name)
 			}
 		}
 
@@ -232,16 +234,52 @@ func notify(path string, cb func([]string)) {
 	select {}
 }
 
-func run(cmd string) {
+func run(cmd, prefix string) {
+	// build command
+	c := exec.Command("bash", "-c", cmd)
+
+	// create pipe
+	io.Pipe()
+
+	pr, pw := io.Pipe()
+	defer pw.Close()
+
+	// set pipes
+	c.Stdout = pw
+	c.Stderr = pw
+
+	// run printer
+	done := make(chan struct{})
+	go func() {
+		// ensure close
+		defer close(done)
+
+		// prepare scanner
+		scanner := bufio.NewScanner(pr)
+
+		// print lines
+		for scanner.Scan() {
+			fmt.Printf("%s: %s\n", prefix, scanner.Text())
+		}
+
+		// check error
+		err := scanner.Err()
+		if err != nil {
+			panic(err)
+		}
+	}()
+
 	// run command
-	out, err := exec.Command("bash", "-c", cmd).Output()
+	err := c.Run()
 	if err != nil {
-		print(string(out))
 		panic(err)
 	}
 
-	// print output
-	fmt.Print(string(out))
+	// closes pipes
+	pw.Close()
+
+	// await done
+	<-done
 }
 
 func unique(list []string) []string {

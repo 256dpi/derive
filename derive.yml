@@ -3,7 +3,7 @@
   match:
     - "_foo"
   run:
-    - cp -f _foo _bar
+    - cp -f _foo _bar; echo "Hello World"
 
 # run script or delegate to watch script
 - name: baz
