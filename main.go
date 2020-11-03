@@ -6,6 +6,8 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sort"
+	"strings"
 
 	"github.com/gobwas/glob"
 	"github.com/sjansen/watchman"
@@ -135,6 +137,14 @@ func main() {
 			}
 		}
 
+		// check dirty
+		if len(dirty) == 0 {
+			return
+		}
+
+		// log
+		fmt.Printf("==> Files changed: %s\n", strings.Join(files, ", "))
+
 		// execute dirty rules
 		for rule := range dirty {
 			for _, cmd := range rule.Run {
@@ -142,6 +152,9 @@ func main() {
 				run(cmd)
 			}
 		}
+
+		// log
+		fmt.Println("==> Done!")
 	})
 
 	select {}
@@ -175,12 +188,13 @@ func notify(path string, cb func([]string)) {
 		panic(err)
 	}
 
-	// TODO: Batch up notifications?
+	// prepare queue
+	queue := make(chan []string, 100)
 
-	// print notifications
+	// handle notifications
 	go func() {
 		for not := range client.Notifications() {
-			// get notification
+			// check notification
 			change, ok := not.(*watchman.ChangeNotification)
 			if !ok || change.IsFreshInstance {
 				continue
@@ -192,8 +206,24 @@ func notify(path string, cb func([]string)) {
 				files = append(files, file.Name)
 			}
 
-			// yield
-			cb(files)
+			// queue files
+			queue <- files
+		}
+	}()
+
+	// call callback
+	go func() {
+		for {
+			// get notification
+			files := <-queue
+
+			// append files
+			for len(queue) > 0 {
+				files = append(files, <-queue...)
+			}
+
+			// yield unique files
+			cb(unique(files))
 		}
 	}()
 
@@ -204,4 +234,23 @@ func notify(path string, cb func([]string)) {
 	}
 
 	select {}
+}
+
+func unique(list []string) []string {
+	// build index
+	index := make(map[string]bool, len(list))
+	for _, file := range list {
+		index[file] = true
+	}
+
+	// get uniques
+	list = make([]string, 0, len(index))
+	for item := range index {
+		list = append(list, item)
+	}
+
+	// sort
+	sort.Strings(list)
+
+	return list
 }
