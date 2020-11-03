@@ -13,7 +13,7 @@ go get github.com/256dpi/derive
 ## Configuration
 
 ```yml
-# run script when files changed
+# run script when files change
 - name: bar
   match:
     - "_foo"
