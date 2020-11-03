@@ -120,6 +120,12 @@ func main() {
 		dirty := map[*rule]bool{}
 		for _, file := range files {
 			for _, rule := range rules {
+				// ignore delegates
+				if len(rule.Delegate) > 0 {
+					continue
+				}
+
+				// match globs
 				var inc, exc bool
 				for _, glb := range rule.incGlobs {
 					if glb.Match(file) {
@@ -131,6 +137,8 @@ func main() {
 						exc = true
 					}
 				}
+
+				// add if included and not excluded
 				if inc && !exc {
 					dirty[rule] = true
 				}
