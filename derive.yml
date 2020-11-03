@@ -3,7 +3,7 @@
   match:
     - "_foo"
   run:
-    - cp -f _foo _bar; echo "Hello World"
+    - cp -f _foo _bar
 
 # run script or delegate to watch script
 - name: baz
@@ -11,3 +11,11 @@
     - cp -f _foo _baz
   delegate:
     - watchman-make -p "_foo" --run "cp -f _foo _baz"
+
+# wildcard and exclusion rules
+- name: exc
+  match:
+    - "_b*"
+    - "!_bar"
+  run:
+    - echo '_baz updated'
