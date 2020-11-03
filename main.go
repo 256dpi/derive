@@ -168,18 +168,6 @@ func main() {
 	select {}
 }
 
-func run(cmd string) {
-	// run command
-	out, err := exec.Command("bash", "-c", cmd).Output()
-	if err != nil {
-		print(string(out))
-		panic(err)
-	}
-
-	// print output
-	fmt.Print(string(out))
-}
-
 func notify(path string, cb func([]string)) {
 	// connect
 	client, err := watchman.Connect()
@@ -242,6 +230,18 @@ func notify(path string, cb func([]string)) {
 	}
 
 	select {}
+}
+
+func run(cmd string) {
+	// run command
+	out, err := exec.Command("bash", "-c", cmd).Output()
+	if err != nil {
+		print(string(out))
+		panic(err)
+	}
+
+	// print output
+	fmt.Print(string(out))
 }
 
 func unique(list []string) []string {
