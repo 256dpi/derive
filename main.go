@@ -103,7 +103,12 @@ func main() {
 	// run delegates
 	for _, rule := range rules {
 		for _, cmd := range rule.Delegate {
-			go run(cmd, rule.Name)
+			go func(cmd, name string) {
+				for {
+					run(cmd, name)
+					fmt.Printf("==> Restarting: %s\n", name)
+				}
+			}(cmd, rule.Name)
 		}
 	}
 

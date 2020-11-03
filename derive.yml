@@ -10,7 +10,7 @@
   run:
     - cp -f _foo _baz
   delegate:
-    - watchman-make -p "_foo" --run "cp -f _foo _baz"
+    - watchman-wait . -p "_foo"; cp -f _foo _baz
 
 # wildcard and exclusion rules
 - name: exc
