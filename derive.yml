@@ -11,6 +11,7 @@
     - cp -f _foo _baz
   delegate:
     - watchman-wait . -p "_foo"; cp -f _foo _baz
+  defer: true
 
 # wildcard and exclusion rules
 - name: exc

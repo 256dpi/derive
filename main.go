@@ -24,6 +24,7 @@ type rule struct {
 	Match    []string `yaml:"match"`
 	Run      []string `yaml:"run"`
 	Delegate []string `yaml:"delegate"`
+	Defer    bool     `yaml:"defer"`
 
 	incGlobs []glob.Glob
 	excGlobs []glob.Glob
@@ -76,6 +77,11 @@ func main() {
 		if len(rule.Run) == 0 {
 			panic("missing run commands")
 		}
+
+		// check defer
+		if rule.Defer && len(rule.Delegate) == 0 {
+			panic("missing delegates when deferred")
+		}
 	}
 
 	// log
@@ -84,6 +90,13 @@ func main() {
 	// iterate over all rules
 	for _, rule := range rules {
 		for _, cmd := range rule.Run {
+			// check defer
+			if *watch && rule.Defer {
+				fmt.Printf("==> Deferred %s\n", rule.Name)
+				continue
+			}
+
+			// execute rule
 			fmt.Printf("==> Running %s: %q\n", rule.Name, cmd)
 			run(cmd, rule.Name)
 		}
